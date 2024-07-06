@@ -47,24 +47,26 @@ jobs:
         STREAM_SECRET_KEY: ${{ secrets.STREAM_SECRET_KEY }}
       run: npm run build
 
-    # - name: Upload build artifacts
-    #   uses: actions/upload-artifact@v2
-    #   with:
-    #     name: build-artifacts
-    #     path: .
-
   deploy:
     needs: build
     runs-on: ubuntu-latest
 
     steps:
-    # - name: Download build artifacts
-    #   uses: actions/download-artifact@v2
-    #   with:
-    #     name: build-artifacts
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 2
+
+    - name: Setup SSH for Git operations
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan github.com >> ~/.ssh/known_hosts
 
     - name: Deploy LearnMeet to Oracle VPS
-      uses: appleboy/ssh-action@v0.1.4
+      uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.VPS_IP }}
         username: ${{ secrets.VPS_USERNAME }}
@@ -89,7 +91,7 @@ jobs:
 
     steps:
     - name: Restart PM2 process
-      uses: appleboy/ssh-action@v0.1.4
+      uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.VPS_IP }}
         username: ${{ secrets.VPS_USERNAME }}
